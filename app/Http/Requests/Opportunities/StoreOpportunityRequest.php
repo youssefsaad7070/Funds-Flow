@@ -25,20 +25,20 @@ class StoreOpportunityRequest extends FormRequest
     {
         return [
             'business_name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'required|string|min:10',
             'amount_needed' => 'required|numeric|min:0',
-            'potential_risks' => 'required|string',
-            'future_growth' => 'required|string',
-            'products_or_services' => 'required|string',
+            'potential_risks' => 'required|string|max:255',
+            'future_growth' => 'required|string|max:255',
+            'products_or_services' => 'required|string|max:255',
             'returns_percentage' => 'required|string|min:0|max:100',
-            'company_valuation' => 'required|string|min:0',
+            'company_valuation' => 'required|string|min:0|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'revenues' => 'required|string|min:0',
             'net_profit' => 'required|string|min:0',
             'profit_margin' => 'required|string|min:0|max:100',
-            'cash_flow' => 'required|string|min:0',
-            'ROI' => 'required|string',
+            'cash_flow' => 'required|string|min:0|max:255',
+            'ROI' => 'required|string|max:255',
             'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
         ];
     }

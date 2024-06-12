@@ -32,7 +32,7 @@ class ProfileController extends Controller
         if ($user->hasRole('investor')) {
 
             // Retrieve investor-specific data
-            $investorData = $user->investors()->first();
+            $investorData = $user->load('investor');
 
             // Retrieve invested opportunities with pivot fields
             $investedOpportunities = $user->investedOpportunities()
@@ -51,11 +51,11 @@ class ProfileController extends Controller
                 'invested_opportunities' => $investedOpportunities->isEmpty() ? 'The User did not invest in any investment opportunity' : $investedOpportunities,
             ], 200);
 
-        // Check if the user has the 'business' role
+            // Check if the user has the 'business' role
         } else if ($user->hasRole('business')) {
 
             // Retrieve business-specific data
-            $businessData = $user->businesses()->first();
+            $businessData = $user->load('business');
 
             // Retrieve approved investment opportunities
             $Opportunities = $user->investmentOpportunities()->where('approved', true)->get();
@@ -79,7 +79,7 @@ class ProfileController extends Controller
                 'investment_history' => $investmentHistory->isEmpty() ? 'No History found !' : $investmentHistory
             ], 200);
 
-        // Check if the user has the 'admin' role
+            // Check if the user has the 'admin' role
         } else if ($user->hasRole('admin')) {
 
             // Retrieve admin-specific data
@@ -110,7 +110,7 @@ class ProfileController extends Controller
     {
         // Retrieve the authenticated user
         $user = User::where('id', auth()->id())->first();
-        
+
         // Check if the user has the 'investor' role
         if ($user->hasRole('investor')) {
             $input = $request->only([
@@ -183,7 +183,7 @@ class ProfileController extends Controller
                 'data' => $validatedData
             ]);
 
-        // Check if the user has the 'business' role
+            // Check if the user has the 'business' role
         } else if ($user->hasRole('business')) {
             $input = $request->only([
                 'name', 'email', 'tax_card_number', 'phone',
@@ -255,7 +255,7 @@ class ProfileController extends Controller
                 'data' => $validatedData
             ]);
 
-        // Check if the user has the 'admin' role
+            // Check if the user has the 'admin' role
         } else if ($user->hasRole('admin')) {
 
             $input = $request->only([
@@ -264,7 +264,7 @@ class ProfileController extends Controller
 
             // Retrieve the admin record associated with the user
             $admin = Admin::where('user_id', auth()->id())->first();
-        
+
             // Validate the input data
             $validateData = Validator::make(
                 $input,
@@ -292,7 +292,7 @@ class ProfileController extends Controller
 
             // Get the validated data
             $validatedData = $validateData->validated();
-        
+
             // Handle photo upload
             if ($request->hasFile('photo')) {
 
@@ -324,7 +324,7 @@ class ProfileController extends Controller
                 ])
             );
             $admin->update($adminData);
-            
+
             // Return a JSON response with the updated data
             return response()->json([
                 'status' => true,
@@ -335,70 +335,52 @@ class ProfileController extends Controller
     }
 
     // Method to update admin-specific profile data
-    public function updateAdminProfile(Request $request, $uuid)
+    public function updateAdminProfile(Request $request)
     {
-        // Retrieve the authenticated user
-        $user = User::where('id', auth()->id())->first();
+        $input = $request->only([
+            'commission_amount'
+        ]);
 
-        // Check if the user has the 'admin' role
-        if ($user->hasRole('admin')) {
-            
-            $input = $request->only([
-                'commission_percentage', 'commission_amount'
-            ]);
-            
-            // Retrieve the specific investment opportunity managed by the admin
-            $opportunity = InvestmentOpportunity::where('uuid', $uuid)->where('admin_id', auth()->id())->first();
+        // Retrieve the specific investment opportunity managed by the admin
+        $opportunity = InvestmentOpportunity::where('uuid', $request->uuid)->first();
 
-            // If the opportunity is not found, return an error response
-            if (!$opportunity){
-                return response()->json([
-                    'status' => false,
-                    'message' => 'No Investment Opportunities found!'
-                ]);
-            }
-
-            // Validate the input data
-            $validateData = Validator::make(
-                $input,
-                [    
-                    'commission_percentage' => 'sometimes',
-                    'commission_amount' => 'sometimes',
-                ]
-            );
-
-            // Handle validation failure
-            if ($validateData->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'validation error',
-                    'errors' => $validateData->errors()
-                ], 401);
-            }
-
-            // Get the validated data
-            $validatedData = $validateData->validated();
-
-            // Update the investment opportunity with the validated data
-            $opportunityData = array_intersect_key(
-                $validatedData,
-                array_flip([
-                    'commission_percentage', 'commission_amount'
-                ])
-            );
-            $opportunity->update($opportunityData);
-            
-            // Return a JSON response with the updated data
+        // If the opportunity is not found, return an error response
+        if (!$opportunity) {
             return response()->json([
-                'status' => true,
-                'message' => 'Data updated successfully!',
-                'data' => $validatedData,
+                'status' => false,
+                'message' => 'No Investment Opportunities found!'
             ]);
         }
-        // Return an error response if the user is not an admin
+
+        // Validate the input data
+        $validateData = Validator::make(
+            $input,
+            [
+                'commission_amount' => 'sometimes',
+            ]
+        );
+
+        // Handle validation failure
+        if ($validateData->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'validation error',
+                'errors' => $validateData->errors()
+            ], 401);
+        }
+
+        // Get the validated data
+        $validatedData = $validateData->validated();
+
+        // Update the investment opportunity with the validated data
+
+        $opportunity->update($validatedData);
+
+        // Return a JSON response with the updated data
         return response()->json([
-            'status' => false,
-            'message' => 'No Admin found!',
-        ], 404);
+            'status' => true,
+            'message' => 'Commission updated successfully!',
+            'data' => $validatedData,
+        ]);
     }
 }

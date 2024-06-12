@@ -17,7 +17,12 @@ class StripeController extends Controller
 
         $user = User::find(auth()->id());
 
-        if ($user->hasVerifiedEmail()) {
+        if ($user->hasRole('business')) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Sorry, You can not invest, Try to register as investor.',
+            ], 403);
+        } else if (! $user->hasVerifiedEmail()) {
             return response()->json([
                 'status' => true,
                 'message' => 'Sorry, You must verify your email address first!.',
@@ -27,8 +32,8 @@ class StripeController extends Controller
                 'status' => true,
                 'message' => 'Sorry, You are not approved yet, Please contact us!.',
             ], 403);
-        }
-
+        } 
+        
         $input = $request->only(['amount', 'uuid']);
 
         $validator = Validator::make($input, [
@@ -74,7 +79,7 @@ class StripeController extends Controller
                 'message' => 'This investment opportunity has ended.',
             ], 410);
         }
-        $successUrl = $request->successUrl . '?session_id={CHECKOUT_SESSION_ID}';
+        $successUrl = $request->successUrl . '/{CHECKOUT_SESSION_ID}';
         $cancelUrl = $request->cancelUrl ;
         \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 

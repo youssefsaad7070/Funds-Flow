@@ -222,6 +222,7 @@ class InvestmentOpportunityController extends Controller
         // Update the investment opportunity with the validated data
         $investmentOpportunity->update($validatedData);
 
+        $investmentOpportunity->approved = false ; 
         // Returining the successfull response to the front end (Data updated successfully!)
         return response()->json([
             'status' => true,

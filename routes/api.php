@@ -23,6 +23,8 @@ Route::post('password/forgot-password', [ForgetPasswordController::class, 'forgo
 Route::post('password/otpvalidation', [ResetPasswordController::class, 'otpValidation']);
 Route::post('password/reset-password', [ResetPasswordController::class, 'passwordReset']);
 
+Route::post('email-verification', [EmailVerificationController::class, 'email_verification']);
+Route::post('send-email-verification', [EmailVerificationController::class, 'sendEmailVerification']);
 // Route::stripeWebhooks('stripe-webhook');
 Route::middleware('auth:sanctum')->group(function () {
     
@@ -32,7 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('update-profile', [ProfileController::class, 'updateProfile']);
 
     Route::group(['middleware' => ['role:admin']], function () {
-        Route::post('update-admin-profile/{uuid}', [ProfileController::class, 'updateAdminProfile']);
+        Route::post('update-admin-profile', [ProfileController::class, 'updateAdminProfile']);
         
         Route::get('/users/investors', [ManageUsersController::class, 'indexInvestors']);
         Route::get('/users/businesses', [ManageUsersController::class, 'indexBusinesses']);
@@ -54,7 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::group(['middleware' => ['role:business']], function () {
         Route::post('opportunity/create', [InvestmentOpportunityController::class, 'store']);
         Route::post('opportunity/update/{uuid}', [InvestmentOpportunityController::class, 'update']);
-        Route::post('opportunity/delete/{uuid}', [InvestmentOpportunityController::class, 'delete']);
+        Route::delete('opportunity/delete/{uuid}', [InvestmentOpportunityController::class, 'delete']);
     });
 
     Route::group(['middleware' => ['role:admin']], function () {
